@@ -1,0 +1,88 @@
+#!/bin/bash
+
+# Función para mostrar un mensaje de error y salir
+function mostrar_error {
+  echo "ERROR: $1"
+  exit 1
+}
+
+# Pedir al usuario que ingrese una opción
+echo "Seleccione una opción:"
+echo "1. Recuperar los datos de un usuario"
+echo "2. Dar de alta a un usuario"
+echo "3. Dar de alta a un grupo de usuarios"
+echo "4. Asociar un usuario a un grupo"
+read opcion
+
+# Manejar la opción seleccionada
+case $opcion in
+  1)
+    # Pedir al usuario que ingrese un nombre de usuario
+    echo "Ingrese el nombre de usuario:"
+    read usuario
+
+    # Verificar si el usuario existe
+    if id "$usuario" >/dev/null 2>&1; then
+      echo "Datos del usuario:"
+      finger "$usuario"
+    else
+      mostrar_error "El usuario no existe"
+    fi
+    ;;
+  2)
+    # Pedir al usuario que ingrese un nombre de usuario
+    echo "Ingrese el nombre de usuario:"
+    read usuario
+
+    # Verificar si el usuario ya existe
+    if id "$usuario" >/dev/null 2>&1; then
+      mostrar_error "El usuario ya existe"
+    fi
+
+    # Dar de alta al usuario
+    useradd "$usuario" || mostrar_error "No se pudo crear el usuario"
+    echo "Usuario creado correctamente"
+    ;;
+  3)
+    # Pedir al usuario que ingrese un nombre de grupo
+    echo "Ingrese el nombre del grupo:"
+    read grupo
+
+    # Verificar si el grupo ya existe
+    if getent group "$grupo" >/dev/null; then
+      mostrar_error "El grupo ya existe"
+    fi
+
+    # Dar de alta al grupo
+    groupadd "$grupo" || mostrar_error "No se pudo crear el grupo"
+    echo "Grupo creado correctamente"
+    ;;
+  4)
+    # Pedir al usuario que ingrese un nombre de usuario
+    echo "Ingrese el nombre de usuario:"
+    read usuario
+
+    # Verificar si el usuario existe
+    if ! id "$usuario" >/dev/null 2>&1; then
+      mostrar_error "El usuario no existe"
+    fi
+
+    # Pedir al usuario que ingrese un nombre de grupo
+    echo "Ingrese el nombre del grupo:"
+    read grupo
+
+    # Verificar si el grupo existe
+    if ! getent group "$grupo" >/dev/null; then
+      mostrar_error "El grupo no existe"
+    fi
+
+    # Asociar al usuario al grupo
+    usermod -a -G "$grupo" "$usuario" || mostrar_error "No se pudo asociar el usuario al grupo"
+    echo "Usuario asociado al grupo correctamente"
+    ;;
+  *)
+    mostrar_error "Opción no válida"
+    ;;
+esac
+
+echo "Fin del script"
